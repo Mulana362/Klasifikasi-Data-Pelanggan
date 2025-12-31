@@ -1,0 +1,585 @@
+import streamlit as st
+import pandas as pd
+import plotly.express as px
+import random
+import os
+
+from id3_core import build_id3, predict, tree_to_text, rules_from_tree
+
+# ==========================
+# CONFIG
+# ==========================
+st.set_page_config(
+    page_title="Dashboard ID3 - Data Pelanggan Property",
+    layout="wide",
+    page_icon="📊",
+    initial_sidebar_state="expanded"
+)
+
+# ==========================
+# CSS (FINAL FULL)
+# ==========================
+st.markdown("""
+<style>
+@keyframes fadeIn {
+  from {opacity: 0; transform: translateY(12px);}
+  to {opacity: 1; transform: translateY(0);}
+}
+
+/* HEADER TRANSPARAN (JANGAN DIHILANGKAN TOTAL BIAR SIDEBAR AMAN) */
+header[data-testid="stHeader"]{
+  background: transparent !important;
+  box-shadow: none !important;
+}
+div[data-testid="stToolbar"]{ visibility: hidden; }
+#MainMenu { visibility: hidden; }
+footer { visibility: hidden; }
+
+/* BACKGROUND */
+.stApp{
+  background:
+    radial-gradient(900px 500px at 12% 10%, rgba(56,189,248,0.22), transparent 55%),
+    radial-gradient(900px 500px at 88% 18%, rgba(45,212,191,0.18), transparent 55%),
+    radial-gradient(900px 500px at 55% 92%, rgba(99,102,241,0.14), transparent 55%),
+    linear-gradient(180deg, #0b1220 0%, #0a1020 55%, #07101b 100%);
+  color: #e5e7eb;
+}
+
+/* Biar konten tidak ketimpa footer */
+.block-container{ padding-top: 1.1rem; padding-bottom: 90px !important; }
+
+/* SIDEBAR */
+[data-testid="stSidebar"]{
+  background: linear-gradient(180deg, #0f1b2d, #0b1220) !important;
+  border-right: 1px solid rgba(255,255,255,0.08);
+}
+[data-testid="stSidebar"] * { color: #e5e7eb !important; }
+
+/* LOGO NYATU SIDEBAR (TANPA PUTIH) */
+.logo-wrap{
+  margin: -12px -12px 10px -12px;
+  padding: 0;
+  background: transparent;
+  border: none;
+}
+.logo-wrap img{
+  background: transparent !important;
+  border-radius: 0 !important;
+  padding: 0 !important;
+  box-shadow: none !important;
+}
+
+/* ==========================
+   INPUT SIDEBAR: ANTI PUTIH (VERSI STREAMLIT APAPUN)
+========================== */
+:root{
+  --sb-bg: rgba(255,255,255,0.08);
+  --sb-bg2: rgba(255,255,255,0.12);
+  --sb-border: rgba(255,255,255,0.18);
+  --sb-border2: rgba(255,255,255,0.34);
+  --sb-text: rgba(229,231,235,0.92);
+  --sb-placeholder: rgba(229,231,235,0.55);
+}
+
+section[data-testid="stSidebar"] .stTextInput,
+section[data-testid="stSidebar"] .stNumberInput,
+section[data-testid="stSidebar"] .stSelectbox,
+section[data-testid="stSidebar"] .stMultiSelect{
+  background: transparent !important;
+}
+
+section[data-testid="stSidebar"] .stTextInput > div > div,
+section[data-testid="stSidebar"] .stNumberInput > div > div,
+section[data-testid="stSidebar"] div[data-baseweb="base-input"] > div,
+section[data-testid="stSidebar"] div[data-baseweb="input"] > div,
+section[data-testid="stSidebar"] div[data-baseweb="textarea"] > div{
+  background: var(--sb-bg) !important;
+  border: 1px solid var(--sb-border) !important;
+  border-radius: 14px !important;
+  box-shadow: none !important;
+}
+
+section[data-testid="stSidebar"] input,
+section[data-testid="stSidebar"] textarea{
+  background: transparent !important;
+  color: var(--sb-text) !important;
+  -webkit-text-fill-color: var(--sb-text) !important;
+  caret-color: var(--sb-text) !important;
+}
+
+section[data-testid="stSidebar"] input::placeholder,
+section[data-testid="stSidebar"] textarea::placeholder{
+  color: var(--sb-placeholder) !important;
+}
+
+section[data-testid="stSidebar"] input:-webkit-autofill{
+  -webkit-text-fill-color: var(--sb-text) !important;
+  box-shadow: 0 0 0px 1000px rgba(255,255,255,0.08) inset !important;
+  transition: background-color 99999s ease-in-out 0s;
+}
+
+section[data-testid="stSidebar"] div[data-baseweb="select"] > div{
+  background: var(--sb-bg) !important;
+  border: 1px solid var(--sb-border) !important;
+  border-radius: 14px !important;
+}
+section[data-testid="stSidebar"] div[data-baseweb="select"] > div:focus-within{
+  background: var(--sb-bg2) !important;
+  border: 1px solid var(--sb-border2) !important;
+}
+
+section[data-testid="stSidebar"] span[data-baseweb="tag"]{
+  background: rgba(255,255,255,0.12) !important;
+  border: 1px solid rgba(255,255,255,0.14) !important;
+}
+
+/* HERO */
+.hero{
+  background: rgba(255,255,255,0.06);
+  border: 1px solid rgba(255,255,255,0.10);
+  border-radius: 20px;
+  padding: 18px 18px 16px 18px;
+  backdrop-filter: blur(8px);
+  animation: fadeIn .6s ease-in-out;
+}
+.hero h1{ margin: 0; font-size: 2.05rem; font-weight: 950; letter-spacing: .2px; }
+.hero p{ margin: 6px 0 0 0; color: rgba(229,231,235,.75); }
+
+/* KPI GRID */
+.stats-grid{
+  display: grid;
+  grid-template-columns: repeat(4, minmax(220px, 1fr));
+  gap: 18px;
+  margin-top: 16px;
+}
+.kpi{
+  border-radius: 22px;
+  padding: 18px 18px;
+  height: 180px;
+  display:flex;
+  flex-direction:column;
+  justify-content:center;
+  text-align:left;
+  background: rgba(255,255,255,0.06);
+  border: 1px solid rgba(255,255,255,0.11);
+  backdrop-filter: blur(10px);
+  animation: fadeIn .7s ease-in-out;
+  transition: all .25s ease;
+}
+.kpi:hover{
+  transform: translateY(-4px);
+  box-shadow: 0 16px 40px rgba(0,0,0,.35);
+}
+.kpi .label{ font-size: 1.02rem; color: rgba(229,231,235,.75); font-weight: 800; margin-bottom: 8px; }
+.kpi .value{ font-size: 3.0rem; font-weight: 950; line-height: 1; }
+.kpi .tag{ margin-top: 10px; font-size: .86rem; color: rgba(229,231,235,.70); }
+.kpi.blue { border-left: 6px solid rgba(56,189,248,0.9); }
+.kpi.green{ border-left: 6px solid rgba(34,197,94,0.9); }
+.kpi.red  { border-left: 6px solid rgba(239,68,68,0.9); }
+.kpi.amber{ border-left: 6px solid rgba(245,158,11,0.95); }
+
+/* GLASS SECTION */
+.glass{
+  background: rgba(255,255,255,0.06);
+  border: 1px solid rgba(255,255,255,0.10);
+  border-radius: 18px;
+  padding: 16px;
+  backdrop-filter: blur(10px);
+  animation: fadeIn .7s ease-in-out;
+}
+
+/* DATAFRAME DARK MODE */
+div[data-testid="stDataFrame"]{
+  border-radius:16px;
+  overflow:hidden;
+  border: 1px solid rgba(255,255,255,0.12);
+  background: rgba(10,16,32,0.55) !important;
+}
+div[data-testid="stDataFrame"] .ag-root-wrapper{
+  background: rgba(10,16,32,0.55) !important;
+  border: none !important;
+}
+div[data-testid="stDataFrame"] .ag-header{
+  background: rgba(255,255,255,0.06) !important;
+  border-bottom: 1px solid rgba(255,255,255,0.10) !important;
+}
+div[data-testid="stDataFrame"] .ag-header-cell-label{
+  color: rgba(229,231,235,0.92) !important;
+  font-weight: 700 !important;
+}
+div[data-testid="stDataFrame"] .ag-row{
+  background: rgba(0,0,0,0) !important;
+  color: rgba(229,231,235,0.92) !important;
+}
+div[data-testid="stDataFrame"] .ag-row:hover{
+  background: rgba(255,255,255,0.06) !important;
+}
+div[data-testid="stDataFrame"] .ag-cell{
+  border-bottom: 1px solid rgba(255,255,255,0.08) !important;
+  border-right: 1px solid rgba(255,255,255,0.06) !important;
+  color: rgba(229,231,235,0.92) !important;
+}
+
+/* CENTER KOLOM "No" */
+div[data-testid="stDataFrame"] div[col-id="No"]{
+  text-align: center !important;
+}
+div[data-testid="stDataFrame"] .ag-header-cell[col-id="No"] .ag-header-cell-label{
+  justify-content: center !important;
+}
+
+/* Buttons */
+.stButton>button{
+  border-radius: 14px;
+  padding: 10px 14px;
+  border: 1px solid rgba(255,255,255,0.16);
+  background: rgba(255,255,255,0.08);
+  color: #e5e7eb;
+}
+.stButton>button:hover{
+  border: 1px solid rgba(255,255,255,0.30);
+  background: rgba(255,255,255,0.14);
+}
+
+/* FOOTER FIXED */
+.app-footer{
+  position: fixed;
+  left: 0;
+  bottom: 0;
+  width: 100%;
+  text-align: center;
+  padding: 12px 0;
+  color: rgba(229,231,235,.70);
+  background: rgba(7,16,27,0.55);
+  border-top: 1px solid rgba(255,255,255,0.10);
+  backdrop-filter: blur(10px);
+  z-index: 9999;
+}
+</style>
+""", unsafe_allow_html=True)
+
+# ==========================
+# LOAD DATA
+# ==========================
+@st.cache_data
+def load_data(path: str) -> pd.DataFrame:
+    try:
+        df = pd.read_csv(path, encoding="utf-8-sig", sep=";")
+    except Exception:
+        df = pd.read_csv(path, encoding="utf-8-sig", sep=",")
+    df.columns = [str(c).strip() for c in df.columns]
+    df = df.fillna("").applymap(lambda x: str(x).strip())
+    return df
+
+# ==========================
+# SIDEBAR
+# ==========================
+with st.sidebar:
+    st.markdown('<div class="logo-wrap">', unsafe_allow_html=True)
+    if os.path.exists("logo.png"):
+        st.image("logo.png", use_container_width=True)
+    else:
+        st.markdown("### 🏷️ Logo belum ada")
+        st.caption("Taruh file **logo.png** di folder project.")
+    st.markdown("</div>", unsafe_allow_html=True)
+
+    st.markdown("**Mulana Property**")
+    st.caption("Klasifikasi Data Pelanggan (ID3)")
+
+    st.markdown("## ⚙️ Pengaturan")
+    file_name = st.text_input("Nama file CSV", value="data_pelanggan_fix1.csv", key="file_name_cfg")
+    target_col = st.text_input("Kolom Target", value="Keputusan", key="target_col_cfg")
+
+    st.markdown("---")
+    st.markdown("### 🔍 Filter Data")
+
+# ==========================
+# LOAD DF
+# ==========================
+try:
+    df = load_data(file_name)
+except Exception as e:
+    st.error(f"Gagal membaca file: {file_name}\n\nDetail: {e}")
+    st.stop()
+
+if "No" in df.columns:
+    df = df.drop(columns=["No"])
+
+required = ["Penghasilan", "Usia", "Pekerjaan", "Kredit", target_col]
+missing = [c for c in required if c not in df.columns]
+if missing:
+    st.error(f"Kolom kurang: {missing}\nKolom yang ada: {list(df.columns)}")
+    st.stop()
+
+# ==========================
+# FILTERS
+# ==========================
+with st.sidebar:
+    pekerjaan = st.multiselect(
+        "Pilih Pekerjaan",
+        options=sorted(df["Pekerjaan"].unique()),
+        default=sorted(df["Pekerjaan"].unique()),
+        key="pekerjaan_filter"
+    )
+    kredit = st.multiselect(
+        "Kondisi Kredit",
+        options=sorted(df["Kredit"].unique()),
+        default=sorted(df["Kredit"].unique()),
+        key="kredit_filter"
+    )
+    keputusan = st.selectbox(
+        "Keputusan",
+        options=["Semua"] + sorted(df[target_col].unique()),
+        key="keputusan_filter"
+    )
+
+    st.markdown("---")
+    st.markdown("### 🧪 Evaluasi")
+    test_size = st.slider("Test size", 0.1, 0.5, 0.2, 0.05, key="test_size")
+    seed = st.number_input("Random seed", min_value=0, max_value=9999, value=42, step=1, key="seed")
+
+# ==========================
+# FILTER LOGIC
+# ==========================
+df_filtered = df[(df["Pekerjaan"].isin(pekerjaan)) & (df["Kredit"].isin(kredit))]
+if keputusan != "Semua":
+    df_filtered = df_filtered[df_filtered[target_col].str.lower() == keputusan.lower()]
+
+display_df = df_filtered.copy()
+display_df.insert(0, "No", range(1, len(display_df) + 1))
+
+# ==========================
+# HERO
+# ==========================
+st.markdown("""
+<div class="hero">
+  <h1>📊 Data Pelanggan Mulana Property</h1>
+  <p>Visualisasi interaktif + Information</p>
+</div>
+""", unsafe_allow_html=True)
+
+# ==========================
+# KPI
+# ==========================
+total = len(df_filtered)
+iya = (df_filtered[target_col].str.lower() == "iya").sum()
+tidak = (df_filtered[target_col].str.lower() == "tidak").sum()
+persen = (iya / total * 100) if total > 0 else 0
+
+st.markdown(f"""
+<div class="stats-grid">
+  <div class="kpi blue">
+    <div class="label">Total Data</div>
+    <div class="value">{total}</div>
+    <div class="tag">Jumlah baris setelah filter</div>
+  </div>
+  <div class="kpi green">
+    <div class="label">Iya</div>
+    <div class="value">{iya}</div>
+    <div class="tag">Total keputusan = Iya</div>
+  </div>
+  <div class="kpi red">
+    <div class="label">Tidak</div>
+    <div class="value">{tidak}</div>
+    <div class="tag">Total keputusan = Tidak</div>
+  </div>
+  <div class="kpi amber">
+    <div class="label">Persentase Iya</div>
+    <div class="value">{persen:.0f}%</div>
+    <div class="tag">Total Persentase</div>
+  </div>
+</div>
+""", unsafe_allow_html=True)
+
+st.write("")
+
+# ==========================
+# TRAIN ID3
+# ==========================
+features = ["Penghasilan", "Usia", "Pekerjaan", "Kredit"]
+
+def train_test_split(df_in: pd.DataFrame, test_size: float, seed: int):
+    idx = list(range(len(df_in)))
+    random.Random(seed).shuffle(idx)
+    cut = int(len(idx) * (1 - test_size))
+    train_idx = idx[:cut]
+    test_idx = idx[cut:]
+    return df_in.iloc[train_idx].reset_index(drop=True), df_in.iloc[test_idx].reset_index(drop=True)
+
+df_for_model = df_filtered.copy()
+if len(df_for_model) < 5:
+    df_for_model = df.copy()
+
+train_df, test_df = train_test_split(df_for_model, float(test_size), int(seed))
+tree = build_id3(train_df.to_dict(orient="records"), features, target_col)
+
+y_true = test_df[target_col].tolist()
+y_pred = [predict(tree, row) for row in test_df[features].to_dict(orient="records")]
+acc = sum(1 for t, p in zip(y_true, y_pred) if t == p) / max(1, len(y_true))
+
+# ==========================
+# CHART STYLE
+# ==========================
+CHART_BG = "rgba(255,255,255,0.07)"
+PAPER_BG = "rgba(0,0,0,0)"
+GRID_CLR = "rgba(255,255,255,0.10)"
+FONT_CLR = "rgba(229,231,235,0.90)"
+
+PALETTE_DECISION = ["#38bdf8", "#a78bfa"]
+PALETTE_CREDIT   = ["#34d399", "#60a5fa"]
+
+def style_fig(fig):
+    fig.update_layout(
+        plot_bgcolor=CHART_BG,
+        paper_bgcolor=PAPER_BG,
+        font=dict(color=FONT_CLR, size=14),
+        legend=dict(bgcolor="rgba(0,0,0,0)"),
+        margin=dict(l=10, r=10, t=55, b=10),
+    )
+    fig.update_xaxes(showgrid=False, color=FONT_CLR)
+    fig.update_yaxes(showgrid=True, gridcolor=GRID_CLR, zeroline=False, color=FONT_CLR)
+    return fig
+
+# ==========================
+# TABS
+# ==========================
+tab1, tab2, tab3 = st.tabs(["📈 Visualisasi", "🌳 Model ID3", "🔮 Prediksi"])
+
+with tab1:
+    st.markdown('<div class="glass">', unsafe_allow_html=True)
+
+    st.subheader("🧾 Data (Setelah Difilter)")
+    st.dataframe(display_df, use_container_width=True, hide_index=True)
+
+    csv = df_filtered.to_csv(index=False)
+    st.download_button("📥 Download Data Filtered (CSV)", csv, "data_pelanggan_filtered.csv", "text/csv")
+
+    st.divider()
+    st.subheader("📈 Visualisasi Data Pelanggan")
+
+    fig1 = px.bar(
+        df_filtered,
+        x="Pekerjaan",
+        color=target_col,
+        barmode="group",
+        title="Jumlah Keputusan Berdasarkan Pekerjaan",
+        color_discrete_sequence=PALETTE_DECISION
+    )
+    fig1 = style_fig(fig1)
+    fig1.update_traces(marker_line_width=0)
+    st.plotly_chart(fig1, use_container_width=True)
+
+    fig2 = px.pie(
+        df_filtered,
+        names="Kredit",
+        title="Proporsi Kondisi Kredit",
+        hole=0.55,
+        color_discrete_sequence=PALETTE_CREDIT
+    )
+    fig2 = style_fig(fig2)
+    fig2.update_traces(textfont_color=FONT_CLR)
+    st.plotly_chart(fig2, use_container_width=True)
+
+    st.markdown('</div>', unsafe_allow_html=True)
+
+with tab2:
+    st.markdown('<div class="glass">', unsafe_allow_html=True)
+    st.subheader("🌳 Model ID3 (Decision Tree)")
+    st.info(f"Akurasi evaluasi (split): **{acc*100:.2f}%**  (train={len(train_df)} | test={len(test_df)})")
+    st.code(tree_to_text(tree), language="text")
+
+    st.subheader("📜 Rules (IF–THEN)")
+    rules = rules_from_tree(tree)
+
+    rules_lines = []
+    for i, (cond, label) in enumerate(rules, start=1):
+        st.write(f"**{i}.** IF `{cond}` THEN **{target_col} = {label}**")
+        rules_lines.append(f"{i}. IF {cond} THEN {target_col} = {label}")
+
+    st.download_button("⬇️ Download Rules (.txt)", "\n".join(rules_lines), "rules_id3.txt", "text/plain")
+    st.markdown('</div>', unsafe_allow_html=True)
+
+# ==========================
+# TAB PREDIKSI (TAMBAH NAMA DROPDOWN + AUTO ISI)
+# ==========================
+def _apply_name_to_inputs():
+    nama = st.session_state.get("pred_nama", "")
+    if not nama or nama == "(Manual)":
+        return
+
+    # ambil baris pertama yang cocok
+    rows = df[df.get("Nama", "").astype(str) == str(nama)]
+    if rows.empty:
+        return
+
+    r = rows.iloc[0]
+    # set nilai dropdown lain agar otomatis ikut data excel
+    st.session_state["pred_penghasilan"] = str(r["Penghasilan"])
+    st.session_state["pred_usia"] = str(r["Usia"])
+    st.session_state["pred_pekerjaan"] = str(r["Pekerjaan"])
+    st.session_state["pred_kredit"] = str(r["Kredit"])
+
+
+with tab3:
+    st.markdown('<div class="glass">', unsafe_allow_html=True)
+    st.subheader("🔮 Prediksi Keputusan (ID3)")
+
+    # daftar nama dari CSV (kalau kolom Nama ada)
+    nama_list = ["(Manual)"]
+    if "Nama" in df.columns:
+        nama_vals = [x for x in sorted(df["Nama"].astype(str).unique()) if x.strip() != ""]
+        nama_list += nama_vals
+
+    c0, c1, c2, c3, c4 = st.columns([1.4, 1, 1, 1, 1])
+    sample = {}
+
+    with c0:
+        if "Nama" in df.columns:
+            st.selectbox(
+                "Nama",
+                options=nama_list,
+                key="pred_nama",
+                on_change=_apply_name_to_inputs
+            )
+        else:
+            st.text_input("Nama", key="pred_nama_text")
+
+    with c1:
+        sample["Penghasilan"] = st.selectbox(
+            "Penghasilan",
+            sorted(df["Penghasilan"].unique()),
+            key="pred_penghasilan"
+        )
+    with c2:
+        sample["Usia"] = st.selectbox(
+            "Usia",
+            sorted(df["Usia"].unique()),
+            key="pred_usia"
+        )
+    with c3:
+        sample["Pekerjaan"] = st.selectbox(
+            "Pekerjaan",
+            sorted(df["Pekerjaan"].unique()),
+            key="pred_pekerjaan"
+        )
+    with c4:
+        sample["Kredit"] = st.selectbox(
+            "Kredit",
+            sorted(df["Kredit"].unique()),
+            key="pred_kredit"
+        )
+
+    if st.button("✅ Prediksi Sekarang", key="btn_pred"):
+        hasil = predict(tree, sample)
+        st.success(f"Hasil Prediksi Keputusan: **{hasil}**")
+
+    st.markdown('</div>', unsafe_allow_html=True)
+
+# ==========================
+# FOOTER
+# ==========================
+st.markdown("""
+<div class="app-footer">
+  © 2025 Dashboard Data Pelanggan | Mulana Property
+</div>
+""", unsafe_allow_html=True)
