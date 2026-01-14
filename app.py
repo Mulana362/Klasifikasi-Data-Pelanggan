@@ -297,13 +297,13 @@ def fmt_rp(n: int) -> str:
 
 INCOME_DISPLAY = {
     "Rendah": f"Rendah (≤ {fmt_rp(5_000_000)})",
-    "Sedang": f"Sedang ({fmt_rp(5_000_001)}–{fmt_rp(10_000_000)})",
-    "Tinggi": f"Tinggi (≥ {fmt_rp(10_000_001)})",
+    "Sedang": f"Sedang ({fmt_rp(5_000_000)}–{fmt_rp(10_000_000)})",
+    "Tinggi": f"Tinggi (≥ {fmt_rp(10_000_000)})",
 }
 AGE_DISPLAY = {
     "Remaja": "Remaja (≤ 17)",
-    "Dewasa": "Dewasa (18–35)",
-    "Lansia": "Lansia (≥ 36)",
+    "Dewasa": "Dewasa (18–40)",
+    "Lansia": "Lansia (≥ 40)",
 }
 
 def format_penghasilan(v) -> str:
@@ -657,6 +657,6 @@ with tab3:
 # ==========================
 st.markdown("""
 <div class="app-footer">
-  © 2026 Dashboard Data Pelanggan | Mulana Property
+  © 2025 Dashboard Data Pelanggan | Mulana Property
 </div>
 """, unsafe_allow_html=True)
