@@ -4,7 +4,7 @@ from dataclasses import dataclass
 from typing import Dict, List, Optional, Tuple
 
 
-# ====== URUTAN NILAI (biar rules tampil rapi seperti Excel kamu) ======
+# ====== URUTAN NILAI (biar rules tampil rapi seperti Excel ) ======
 VALUE_ORDER: Dict[str, List[str]] = {
     "Penghasilan": ["Rendah", "Sedang", "Tinggi"],
     "Usia": ["Dewasa", "Lansia"],

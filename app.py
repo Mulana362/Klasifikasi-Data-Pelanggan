@@ -580,6 +580,6 @@ with tab3:
 # ==========================
 st.markdown("""
 <div class="app-footer">
-  © 2025 Dashboard Data Pelanggan | Mulana Property
+  © 2026 Dashboard Data Pelanggan | Mulana Property
 </div>
 """, unsafe_allow_html=True)
