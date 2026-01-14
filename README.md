@@ -44,8 +44,3 @@ streamlit run app.py
 ```text
 http://localhost:8501
 ```
-## Catatan
-Project ini dibuat sebagai latihan/penerapan **dashboard data & klasifikasi (ID3)** menggunakan Python + Streamlit.  
-AI digunakan untuk brainstorming/debugging, sedangkan implementasi, penyesuaian, dan pengujian dilakukan sendiri.
-
-
