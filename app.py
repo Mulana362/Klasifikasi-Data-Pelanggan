@@ -17,7 +17,7 @@ st.set_page_config(
 )
 
 # ==========================
-# CSS (FINAL FULL)
+# CSS (FINAL FULL) + FIX FILE UPLOADER (ANTI PUTIH)
 # ==========================
 st.markdown("""
 <style>
@@ -131,6 +131,37 @@ section[data-testid="stSidebar"] div[data-baseweb="select"] > div:focus-within{
 section[data-testid="stSidebar"] span[data-baseweb="tag"]{
   background: rgba(255,255,255,0.12) !important;
   border: 1px solid rgba(255,255,255,0.14) !important;
+}
+
+/* ==========================
+   FILE UPLOADER DARK MODE (FIX PUTIH)
+========================== */
+section[data-testid="stSidebar"] div[data-testid="stFileUploader"]{
+  background: rgba(255,255,255,0.06) !important;
+  border: 1px solid rgba(255,255,255,0.18) !important;
+  border-radius: 16px !important;
+  padding: 12px !important;
+}
+section[data-testid="stSidebar"] div[data-testid="stFileUploader"] section{
+  background: rgba(255,255,255,0.08) !important;
+  border: 1px dashed rgba(255,255,255,0.35) !important;
+  border-radius: 14px !important;
+}
+section[data-testid="stSidebar"] div[data-testid="stFileUploader"] *{
+  color: rgba(229,231,235,0.92) !important;
+}
+section[data-testid="stSidebar"] div[data-testid="stFileUploader"] button{
+  background: rgba(255,255,255,0.12) !important;
+  color: rgba(229,231,235,0.95) !important;
+  border: 1px solid rgba(255,255,255,0.28) !important;
+  border-radius: 12px !important;
+}
+section[data-testid="stSidebar"] div[data-testid="stFileUploader"] button:hover{
+  background: rgba(255,255,255,0.20) !important;
+  border: 1px solid rgba(255,255,255,0.45) !important;
+}
+section[data-testid="stSidebar"] div[data-baseweb="file-uploader"]{
+  background: transparent !important;
 }
 
 /* HERO */
@@ -259,14 +290,40 @@ div[data-testid="stDataFrame"] .ag-header-cell[col-id="No"] .ag-header-cell-labe
 """, unsafe_allow_html=True)
 
 # ==========================
-# LOAD DATA
+# HELPERS: LABEL ANGKA
+# ==========================
+def fmt_rp(n: int) -> str:
+    return f"{n:,.0f}".replace(",", ".")
+
+INCOME_DISPLAY = {
+    "Rendah": f"Rendah (≤ {fmt_rp(5_000_000)})",
+    "Sedang": f"Sedang ({fmt_rp(5_000_001)}–{fmt_rp(10_000_000)})",
+    "Tinggi": f"Tinggi (≥ {fmt_rp(10_000_001)})",
+}
+AGE_DISPLAY = {
+    "Remaja": "Remaja (≤ 17)",
+    "Dewasa": "Dewasa (18–35)",
+    "Lansia": "Lansia (≥ 36)",
+}
+
+def format_penghasilan(v) -> str:
+    s = str(v).strip()
+    return INCOME_DISPLAY.get(s, s)
+
+def format_usia(v) -> str:
+    s = str(v).strip()
+    return AGE_DISPLAY.get(s, s)
+
+# ==========================
+# LOAD DATA (UPLOAD)
 # ==========================
 @st.cache_data
-def load_data(path: str) -> pd.DataFrame:
+def load_data(source) -> pd.DataFrame:
     try:
-        df = pd.read_csv(path, encoding="utf-8-sig", sep=";")
+        df = pd.read_csv(source, encoding="utf-8-sig", sep=";")
     except Exception:
-        df = pd.read_csv(path, encoding="utf-8-sig", sep=",")
+        df = pd.read_csv(source, encoding="utf-8-sig", sep=",")
+
     df.columns = [str(c).strip() for c in df.columns]
     df = df.fillna("").applymap(lambda x: str(x).strip())
     return df
@@ -287,32 +344,50 @@ with st.sidebar:
     st.caption("Klasifikasi Data Pelanggan (ID3)")
 
     st.markdown("## ⚙️ Pengaturan")
-    file_name = st.text_input("Nama file CSV", value="data_pelanggan_fix1.csv", key="file_name_cfg")
+
+    uploaded_csv = st.file_uploader("📤 Upload CSV", type=["csv"])
+
+    # masih boleh ditampilkan, tapi tidak dipakai lagi (karena wajib upload)
+    file_name = st.text_input("Nama file CSV", value="data_pelanggan_fix1.csv", key="file_name_cfg", disabled=True)
     target_col = st.text_input("Kolom Target", value="Keputusan", key="target_col_cfg")
 
     st.markdown("---")
     st.markdown("### 🔍 Filter Data")
 
 # ==========================
-# LOAD DF
+# WAJIB UPLOAD DULU
 # ==========================
-try:
-    df = load_data(file_name)
-except Exception as e:
-    st.error(f"Gagal membaca file: {file_name}\n\nDetail: {e}")
+if uploaded_csv is None:
+    st.markdown("""
+    <div class="hero">
+      <h1>📤 Upload CSV dulu ya</h1>
+      <p>Silakan upload file CSV di sidebar untuk menampilkan data, visualisasi, dan prediksi ID3.</p>
+    </div>
+    """, unsafe_allow_html=True)
     st.stop()
 
+# ==========================
+# LOAD DF (UPLOAD ONLY)
+# ==========================
+try:
+    df = load_data(uploaded_csv)
+    st.sidebar.success(f"Memakai file upload: {uploaded_csv.name}")
+except Exception as e:
+    st.error(f"Gagal membaca CSV upload.\n\nDetail: {e}")
+    st.stop()
+
+# Drop kolom No kalau ada
 if "No" in df.columns:
     df = df.drop(columns=["No"])
 
-required = ["Penghasilan", "Usia", "Pekerjaan", "Kredit", target_col]
+required = ["Nama", "Penghasilan", "Usia", "Pekerjaan", "Kredit", target_col]
 missing = [c for c in required if c not in df.columns]
 if missing:
     st.error(f"Kolom kurang: {missing}\nKolom yang ada: {list(df.columns)}")
     st.stop()
 
 # ==========================
-# FILTERS
+# FILTERS (aktif setelah upload)
 # ==========================
 with st.sidebar:
     pekerjaan = st.multiselect(
@@ -347,6 +422,10 @@ if keputusan != "Semua":
 
 display_df = df_filtered.copy()
 display_df.insert(0, "No", range(1, len(display_df) + 1))
+
+display_df_view = display_df.copy()
+display_df_view["Penghasilan"] = display_df_view["Penghasilan"].apply(format_penghasilan)
+display_df_view["Usia"] = display_df_view["Usia"].apply(format_usia)
 
 # ==========================
 # HERO
@@ -449,7 +528,7 @@ with tab1:
     st.markdown('<div class="glass">', unsafe_allow_html=True)
 
     st.subheader("🧾 Data (Setelah Difilter)")
-    st.dataframe(display_df, use_container_width=True, hide_index=True)
+    st.dataframe(display_df_view, use_container_width=True, hide_index=True)
 
     csv = df_filtered.to_csv(index=False)
     st.download_button("📥 Download Data Filtered (CSV)", csv, "data_pelanggan_filtered.csv", "text/csv")
@@ -500,31 +579,27 @@ with tab2:
     st.markdown('</div>', unsafe_allow_html=True)
 
 # ==========================
-# TAB PREDIKSI (TAMBAH NAMA DROPDOWN + AUTO ISI)
+# TAB PREDIKSI (NAMA DROPDOWN + AUTO ISI)
 # ==========================
 def _apply_name_to_inputs():
     nama = st.session_state.get("pred_nama", "")
     if not nama or nama == "(Manual)":
         return
 
-    # ambil baris pertama yang cocok
     rows = df[df.get("Nama", "").astype(str) == str(nama)]
     if rows.empty:
         return
 
     r = rows.iloc[0]
-    # set nilai dropdown lain agar otomatis ikut data excel
     st.session_state["pred_penghasilan"] = str(r["Penghasilan"])
     st.session_state["pred_usia"] = str(r["Usia"])
     st.session_state["pred_pekerjaan"] = str(r["Pekerjaan"])
     st.session_state["pred_kredit"] = str(r["Kredit"])
 
-
 with tab3:
     st.markdown('<div class="glass">', unsafe_allow_html=True)
     st.subheader("🔮 Prediksi Keputusan (ID3)")
 
-    # daftar nama dari CSV (kalau kolom Nama ada)
     nama_list = ["(Manual)"]
     if "Nama" in df.columns:
         nama_vals = [x for x in sorted(df["Nama"].astype(str).unique()) if x.strip() != ""]
@@ -534,34 +609,36 @@ with tab3:
     sample = {}
 
     with c0:
-        if "Nama" in df.columns:
-            st.selectbox(
-                "Nama",
-                options=nama_list,
-                key="pred_nama",
-                on_change=_apply_name_to_inputs
-            )
-        else:
-            st.text_input("Nama", key="pred_nama_text")
+        st.selectbox(
+            "Nama",
+            options=nama_list,
+            key="pred_nama",
+            on_change=_apply_name_to_inputs
+        )
 
     with c1:
         sample["Penghasilan"] = st.selectbox(
             "Penghasilan",
             sorted(df["Penghasilan"].unique()),
-            key="pred_penghasilan"
+            key="pred_penghasilan",
+            format_func=format_penghasilan
         )
+
     with c2:
         sample["Usia"] = st.selectbox(
             "Usia",
             sorted(df["Usia"].unique()),
-            key="pred_usia"
+            key="pred_usia",
+            format_func=format_usia
         )
+
     with c3:
         sample["Pekerjaan"] = st.selectbox(
             "Pekerjaan",
             sorted(df["Pekerjaan"].unique()),
             key="pred_pekerjaan"
         )
+
     with c4:
         sample["Kredit"] = st.selectbox(
             "Kredit",
