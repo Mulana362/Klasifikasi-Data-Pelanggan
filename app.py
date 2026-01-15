@@ -297,9 +297,9 @@ def fmt_rp(n: int) -> str:
     return f"{n:,.0f}".replace(",", ".")
 
 INCOME_DISPLAY = {
-    "Rendah": f"Rendah (≤ {fmt_rp(5_000_000)})",
-    "Sedang": f"Sedang ({fmt_rp(5_000_000)}–{fmt_rp(10_000_000)})",
-    "Tinggi": f"Tinggi (≥ {fmt_rp(10_000_000)})",
+    "Rendah": f"Rendah (≤ {fmt_rp(7_000_000)})",
+    "Sedang": f"Sedang ({fmt_rp(7_000_000)}–{fmt_rp(14_000_000)})",
+    "Tinggi": f"Tinggi (≥ {fmt_rp(14_000_000)})",
 }
 AGE_DISPLAY = {
     "Remaja": "Remaja (≤ 17)",
