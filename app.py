@@ -302,8 +302,8 @@ INCOME_DISPLAY = {
 }
 AGE_DISPLAY = {
     "Remaja": "Remaja (≤ 17)",
-    "Dewasa": "Dewasa (18–40)",
-    "Lansia": "Lansia (≥ 40)",
+    "Dewasa": "Dewasa (18-60)",
+    "Lansia": "Lansia (≥ 60)",
 }
 
 def format_penghasilan(v) -> str:
