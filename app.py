@@ -13,13 +13,14 @@ st.set_page_config(
     page_title="Dashboard ID3 - Data Pelanggan Property",
     layout="wide",
     page_icon="📊",
-    initial_sidebar_state="expanded"
+    initial_sidebar_state="expanded",
 )
 
 # ==========================
-# CSS (FINAL FULL) + FIX FILE UPLOADER (ANTI PUTIH)
+# CSS (FINAL FULL) + FIX FILE UPLOADER (ANTI PUTIH) + FIX DROPDOWN ANGKA KESELURUHAN
 # ==========================
-st.markdown("""
+st.markdown(
+    """
 <style>
 @keyframes fadeIn {
   from {opacity: 0; transform: translateY(12px);}
@@ -164,6 +165,21 @@ section[data-testid="stSidebar"] div[data-baseweb="file-uploader"]{
   background: transparent !important;
 }
 
+/* ==========================
+   FIX: DROPDOWN OPTION ANGKA KEPANJANGAN (BIAR NOL KELIATAN SEMUA)
+   - bikin menu dropdown lebih lebar
+   - teks option tidak dipotong "..."
+========================== */
+div[data-baseweb="popover"] ul{
+  min-width: 520px !important;
+}
+div[data-baseweb="popover"] li{
+  white-space: nowrap !important;   /* 1 baris, tidak wrap */
+}
+div[data-baseweb="select"] span{
+  white-space: nowrap !important;
+}
+
 /* HERO */
 .hero{
   background: rgba(255,255,255,0.06);
@@ -287,13 +303,16 @@ div[data-testid="stDataFrame"] .ag-header-cell[col-id="No"] .ag-header-cell-labe
   z-index: 9999;
 }
 </style>
-""", unsafe_allow_html=True)
+""",
+    unsafe_allow_html=True,
+)
 
 # ==========================
 # HELPERS: LABEL ANGKA
 # ==========================
 def fmt_rp(n: int) -> str:
     return f"{n:,.0f}".replace(",", ".")
+
 
 INCOME_DISPLAY = {
     "Rendah": f"Rendah (≤ {fmt_rp(5_000_000)})",
@@ -306,13 +325,16 @@ AGE_DISPLAY = {
     "Lansia": "Lansia (≥ 60)",
 }
 
+
 def format_penghasilan(v) -> str:
     s = str(v).strip()
     return INCOME_DISPLAY.get(s, s)
 
+
 def format_usia(v) -> str:
     s = str(v).strip()
     return AGE_DISPLAY.get(s, s)
+
 
 # ==========================
 # LOAD DATA (UPLOAD)
@@ -320,13 +342,14 @@ def format_usia(v) -> str:
 @st.cache_data
 def load_data(source) -> pd.DataFrame:
     try:
-        df = pd.read_csv(source, encoding="utf-8-sig", sep=";")
+        df_ = pd.read_csv(source, encoding="utf-8-sig", sep=";")
     except Exception:
-        df = pd.read_csv(source, encoding="utf-8-sig", sep=",")
+        df_ = pd.read_csv(source, encoding="utf-8-sig", sep=",")
 
-    df.columns = [str(c).strip() for c in df.columns]
-    df = df.fillna("").applymap(lambda x: str(x).strip())
-    return df
+    df_.columns = [str(c).strip() for c in df_.columns]
+    df_ = df_.fillna("").applymap(lambda x: str(x).strip())
+    return df_
+
 
 # ==========================
 # SIDEBAR
@@ -348,7 +371,12 @@ with st.sidebar:
     uploaded_csv = st.file_uploader("📤 Upload CSV", type=["csv"])
 
     # masih boleh ditampilkan, tapi tidak dipakai lagi (karena wajib upload)
-    file_name = st.text_input("Nama file CSV", value="data_pelanggan_fix1.csv", key="file_name_cfg", disabled=True)
+    st.text_input(
+        "Nama file CSV",
+        value="data_pelanggan_fix1.csv",
+        key="file_name_cfg",
+        disabled=True,
+    )
     target_col = st.text_input("Kolom Target", value="Keputusan", key="target_col_cfg")
 
     st.markdown("---")
@@ -358,12 +386,15 @@ with st.sidebar:
 # WAJIB UPLOAD DULU
 # ==========================
 if uploaded_csv is None:
-    st.markdown("""
+    st.markdown(
+        """
     <div class="hero">
       <h1>📤 Upload CSV dulu ya</h1>
       <p>Silakan upload file CSV di sidebar untuk menampilkan data, visualisasi, dan prediksi ID3.</p>
     </div>
-    """, unsafe_allow_html=True)
+    """,
+        unsafe_allow_html=True,
+    )
     st.stop()
 
 # ==========================
@@ -394,18 +425,18 @@ with st.sidebar:
         "Pilih Pekerjaan",
         options=sorted(df["Pekerjaan"].unique()),
         default=sorted(df["Pekerjaan"].unique()),
-        key="pekerjaan_filter"
+        key="pekerjaan_filter",
     )
     kredit = st.multiselect(
         "Kondisi Kredit",
         options=sorted(df["Kredit"].unique()),
         default=sorted(df["Kredit"].unique()),
-        key="kredit_filter"
+        key="kredit_filter",
     )
     keputusan = st.selectbox(
         "Keputusan",
         options=["Semua"] + sorted(df[target_col].unique()),
-        key="keputusan_filter"
+        key="keputusan_filter",
     )
 
     st.markdown("---")
@@ -430,12 +461,15 @@ display_df_view["Usia"] = display_df_view["Usia"].apply(format_usia)
 # ==========================
 # HERO
 # ==========================
-st.markdown("""
+st.markdown(
+    """
 <div class="hero">
   <h1>📊 Data Pelanggan Mulana Property</h1>
   <p>Visualisasi interaktif + Information</p>
 </div>
-""", unsafe_allow_html=True)
+""",
+    unsafe_allow_html=True,
+)
 
 # ==========================
 # KPI
@@ -445,7 +479,8 @@ iya = (df_filtered[target_col].str.lower() == "iya").sum()
 tidak = (df_filtered[target_col].str.lower() == "tidak").sum()
 persen = (iya / total * 100) if total > 0 else 0
 
-st.markdown(f"""
+st.markdown(
+    f"""
 <div class="stats-grid">
   <div class="kpi blue">
     <div class="label">Total Data</div>
@@ -468,7 +503,9 @@ st.markdown(f"""
     <div class="tag">Total Persentase</div>
   </div>
 </div>
-""", unsafe_allow_html=True)
+""",
+    unsafe_allow_html=True,
+)
 
 st.write("")
 
@@ -477,6 +514,7 @@ st.write("")
 # ==========================
 features = ["Penghasilan", "Usia", "Pekerjaan", "Kredit"]
 
+
 def train_test_split(df_in: pd.DataFrame, test_size: float, seed: int):
     idx = list(range(len(df_in)))
     random.Random(seed).shuffle(idx)
@@ -484,6 +522,7 @@ def train_test_split(df_in: pd.DataFrame, test_size: float, seed: int):
     train_idx = idx[:cut]
     test_idx = idx[cut:]
     return df_in.iloc[train_idx].reset_index(drop=True), df_in.iloc[test_idx].reset_index(drop=True)
+
 
 df_for_model = df_filtered.copy()
 if len(df_for_model) < 5:
@@ -505,7 +544,8 @@ GRID_CLR = "rgba(255,255,255,0.10)"
 FONT_CLR = "rgba(229,231,235,0.90)"
 
 PALETTE_DECISION = ["#38bdf8", "#a78bfa"]
-PALETTE_CREDIT   = ["#34d399", "#60a5fa"]
+PALETTE_CREDIT = ["#34d399", "#60a5fa"]
+
 
 def style_fig(fig):
     fig.update_layout(
@@ -518,6 +558,7 @@ def style_fig(fig):
     fig.update_xaxes(showgrid=False, color=FONT_CLR)
     fig.update_yaxes(showgrid=True, gridcolor=GRID_CLR, zeroline=False, color=FONT_CLR)
     return fig
+
 
 # ==========================
 # TABS
@@ -542,7 +583,7 @@ with tab1:
         color=target_col,
         barmode="group",
         title="Jumlah Keputusan Berdasarkan Pekerjaan",
-        color_discrete_sequence=PALETTE_DECISION
+        color_discrete_sequence=PALETTE_DECISION,
     )
     fig1 = style_fig(fig1)
     fig1.update_traces(marker_line_width=0)
@@ -553,13 +594,13 @@ with tab1:
         names="Kredit",
         title="Proporsi Kondisi Kredit",
         hole=0.55,
-        color_discrete_sequence=PALETTE_CREDIT
+        color_discrete_sequence=PALETTE_CREDIT,
     )
     fig2 = style_fig(fig2)
     fig2.update_traces(textfont_color=FONT_CLR)
     st.plotly_chart(fig2, use_container_width=True)
 
-    st.markdown('</div>', unsafe_allow_html=True)
+    st.markdown("</div>", unsafe_allow_html=True)
 
 with tab2:
     st.markdown('<div class="glass">', unsafe_allow_html=True)
@@ -576,7 +617,7 @@ with tab2:
         rules_lines.append(f"{i}. IF {cond} THEN {target_col} = {label}")
 
     st.download_button("⬇️ Download Rules (.txt)", "\n".join(rules_lines), "rules_id3.txt", "text/plain")
-    st.markdown('</div>', unsafe_allow_html=True)
+    st.markdown("</div>", unsafe_allow_html=True)
 
 # ==========================
 # TAB PREDIKSI (NAMA DROPDOWN + AUTO ISI)
@@ -596,6 +637,7 @@ def _apply_name_to_inputs():
     st.session_state["pred_pekerjaan"] = str(r["Pekerjaan"])
     st.session_state["pred_kredit"] = str(r["Kredit"])
 
+
 with tab3:
     st.markdown('<div class="glass">', unsafe_allow_html=True)
     st.subheader("🔮 Prediksi Keputusan (ID3)")
@@ -605,7 +647,9 @@ with tab3:
         nama_vals = [x for x in sorted(df["Nama"].astype(str).unique()) if x.strip() != ""]
         nama_list += nama_vals
 
-    c0, c1, c2, c3, c4 = st.columns([1.4, 1, 1, 1, 1])
+    # >>> FIX: kolom Penghasilan & Usia dibuat lebih lebar biar label angka tidak kepotong
+    c0, c1, c2, c3, c4 = st.columns([1.4, 2.2, 1.6, 1.2, 1.2])
+
     sample = {}
 
     with c0:
@@ -613,7 +657,7 @@ with tab3:
             "Nama",
             options=nama_list,
             key="pred_nama",
-            on_change=_apply_name_to_inputs
+            on_change=_apply_name_to_inputs,
         )
 
     with c1:
@@ -621,7 +665,7 @@ with tab3:
             "Penghasilan",
             sorted(df["Penghasilan"].unique()),
             key="pred_penghasilan",
-            format_func=format_penghasilan
+            format_func=format_penghasilan,
         )
 
     with c2:
@@ -629,34 +673,37 @@ with tab3:
             "Usia",
             sorted(df["Usia"].unique()),
             key="pred_usia",
-            format_func=format_usia
+            format_func=format_usia,
         )
 
     with c3:
         sample["Pekerjaan"] = st.selectbox(
             "Pekerjaan",
             sorted(df["Pekerjaan"].unique()),
-            key="pred_pekerjaan"
+            key="pred_pekerjaan",
         )
 
     with c4:
         sample["Kredit"] = st.selectbox(
             "Kredit",
             sorted(df["Kredit"].unique()),
-            key="pred_kredit"
+            key="pred_kredit",
         )
 
     if st.button("✅ Prediksi Sekarang", key="btn_pred"):
         hasil = predict(tree, sample)
         st.success(f"Hasil Prediksi Keputusan: **{hasil}**")
 
-    st.markdown('</div>', unsafe_allow_html=True)
+    st.markdown("</div>", unsafe_allow_html=True)
 
 # ==========================
 # FOOTER
 # ==========================
-st.markdown("""
+st.markdown(
+    """
 <div class="app-footer">
   © 2025 Dashboard Data Pelanggan | Mulana Property
 </div>
-""", unsafe_allow_html=True)
+""",
+    unsafe_allow_html=True,
+)
