@@ -17,7 +17,7 @@ st.set_page_config(
 )
 
 # ==========================
-# CSS (FINAL FULL) + FIX FILE UPLOADER (ANTI PUTIH) + FIX DROPDOWN ANGKA KESELURUHAN
+# CSS (FINAL) — FIX INPUT PUTIH (TERMASUK TEXT_INPUT) + GANTI "DISABLED" JADI READONLY CARD
 # ==========================
 st.markdown(
     """
@@ -27,7 +27,7 @@ st.markdown(
   to {opacity: 1; transform: translateY(0);}
 }
 
-/* HEADER TRANSPARAN (JANGAN DIHILANGKAN TOTAL BIAR SIDEBAR AMAN) */
+/* HEADER TRANSPARAN */
 header[data-testid="stHeader"]{
   background: transparent !important;
   box-shadow: none !important;
@@ -45,9 +45,16 @@ footer { visibility: hidden; }
     linear-gradient(180deg, #0b1220 0%, #0a1020 55%, #07101b 100%);
   color: #e5e7eb;
 }
-
-/* Biar konten tidak ketimpa footer */
 .block-container{ padding-top: 1.1rem; padding-bottom: 90px !important; }
+
+:root{
+  --sb-bg: rgba(255,255,255,0.08);
+  --sb-bg2: rgba(255,255,255,0.12);
+  --sb-bd: rgba(255,255,255,0.18);
+  --sb-bd2: rgba(255,255,255,0.34);
+  --sb-text: rgba(229,231,235,0.92);
+  --sb-ph: rgba(229,231,235,0.55);
+}
 
 /* SIDEBAR */
 [data-testid="stSidebar"]{
@@ -56,7 +63,7 @@ footer { visibility: hidden; }
 }
 [data-testid="stSidebar"] * { color: #e5e7eb !important; }
 
-/* LOGO NYATU SIDEBAR (TANPA PUTIH) */
+/* LOGO */
 .logo-wrap{
   margin: -12px -12px 10px -12px;
   padding: 0;
@@ -71,71 +78,64 @@ footer { visibility: hidden; }
 }
 
 /* ==========================
-   INPUT SIDEBAR: ANTI PUTIH (VERSI STREAMLIT APAPUN)
+   FIX UTAMA: TEXT INPUT / NUMBER / SELECT DI SIDEBAR (ANTI PUTIH)
+   - nembak wrapper + nembak langsung <input>
 ========================== */
-:root{
-  --sb-bg: rgba(255,255,255,0.08);
-  --sb-bg2: rgba(255,255,255,0.12);
-  --sb-border: rgba(255,255,255,0.18);
-  --sb-border2: rgba(255,255,255,0.34);
-  --sb-text: rgba(229,231,235,0.92);
-  --sb-placeholder: rgba(229,231,235,0.55);
-}
 
-section[data-testid="stSidebar"] .stTextInput,
-section[data-testid="stSidebar"] .stNumberInput,
-section[data-testid="stSidebar"] .stSelectbox,
-section[data-testid="stSidebar"] .stMultiSelect{
+/* wrapper baseweb */
+section[data-testid="stSidebar"] div[data-baseweb="base-input"],
+section[data-testid="stSidebar"] div[data-baseweb="input"],
+section[data-testid="stSidebar"] div[data-baseweb="textarea"],
+section[data-testid="stSidebar"] div[data-baseweb="select"]{
   background: transparent !important;
 }
 
-section[data-testid="stSidebar"] .stTextInput > div > div,
-section[data-testid="stSidebar"] .stNumberInput > div > div,
+/* wrapper box yang sering jadi putih */
 section[data-testid="stSidebar"] div[data-baseweb="base-input"] > div,
 section[data-testid="stSidebar"] div[data-baseweb="input"] > div,
-section[data-testid="stSidebar"] div[data-baseweb="textarea"] > div{
+section[data-testid="stSidebar"] div[data-baseweb="textarea"] > div,
+section[data-testid="stSidebar"] div[data-baseweb="select"] > div{
   background: var(--sb-bg) !important;
-  border: 1px solid var(--sb-border) !important;
+  border: 1px solid var(--sb-bd) !important;
   border-radius: 14px !important;
   box-shadow: none !important;
 }
 
+/* focus */
+section[data-testid="stSidebar"] div[data-baseweb="base-input"] > div:focus-within,
+section[data-testid="stSidebar"] div[data-baseweb="input"] > div:focus-within,
+section[data-testid="stSidebar"] div[data-baseweb="textarea"] > div:focus-within,
+section[data-testid="stSidebar"] div[data-baseweb="select"] > div:focus-within{
+  background: var(--sb-bg2) !important;
+  border: 1px solid var(--sb-bd2) !important;
+  box-shadow: 0 0 0 3px rgba(99,102,241,0.18) !important;
+}
+
+/* 🔥 INI KUNCI: tembak langsung input biar ga putih */
 section[data-testid="stSidebar"] input,
 section[data-testid="stSidebar"] textarea{
-  background: transparent !important;
+  background-color: rgba(255,255,255,0.04) !important;
   color: var(--sb-text) !important;
   -webkit-text-fill-color: var(--sb-text) !important;
   caret-color: var(--sb-text) !important;
+  border: 0 !important;
+  outline: none !important;
 }
 
+/* placeholder */
 section[data-testid="stSidebar"] input::placeholder,
 section[data-testid="stSidebar"] textarea::placeholder{
-  color: var(--sb-placeholder) !important;
+  color: var(--sb-ph) !important;
 }
 
-section[data-testid="stSidebar"] input:-webkit-autofill{
-  -webkit-text-fill-color: var(--sb-text) !important;
-  box-shadow: 0 0 0px 1000px rgba(255,255,255,0.08) inset !important;
-  transition: background-color 99999s ease-in-out 0s;
-}
-
-section[data-testid="stSidebar"] div[data-baseweb="select"] > div{
-  background: var(--sb-bg) !important;
-  border: 1px solid var(--sb-border) !important;
-  border-radius: 14px !important;
-}
-section[data-testid="stSidebar"] div[data-baseweb="select"] > div:focus-within{
-  background: var(--sb-bg2) !important;
-  border: 1px solid var(--sb-border2) !important;
-}
-
+/* tags multiselect */
 section[data-testid="stSidebar"] span[data-baseweb="tag"]{
   background: rgba(255,255,255,0.12) !important;
   border: 1px solid rgba(255,255,255,0.14) !important;
 }
 
 /* ==========================
-   FILE UPLOADER DARK MODE (FIX PUTIH)
+   FILE UPLOADER DARK MODE
 ========================== */
 section[data-testid="stSidebar"] div[data-testid="stFileUploader"]{
   background: rgba(255,255,255,0.06) !important;
@@ -161,23 +161,38 @@ section[data-testid="stSidebar"] div[data-testid="stFileUploader"] button:hover{
   background: rgba(255,255,255,0.20) !important;
   border: 1px solid rgba(255,255,255,0.45) !important;
 }
-section[data-testid="stSidebar"] div[data-baseweb="file-uploader"]{
-  background: transparent !important;
-}
 
-/* ==========================
-   FIX: DROPDOWN OPTION ANGKA KEPANJANGAN (BIAR NOL KELIATAN SEMUA)
-   - bikin menu dropdown lebih lebar
-   - teks option tidak dipotong "..."
-========================== */
+/* dropdown menu dark */
+div[data-baseweb="popover"] > div{
+  background: rgba(15,23,42,0.98) !important;
+  border: 1px solid rgba(255,255,255,0.14) !important;
+}
 div[data-baseweb="popover"] ul{
   min-width: 520px !important;
+  background: transparent !important;
 }
 div[data-baseweb="popover"] li{
-  white-space: nowrap !important;   /* 1 baris, tidak wrap */
-}
-div[data-baseweb="select"] span{
   white-space: nowrap !important;
+  color: rgba(229,231,235,0.92) !important;
+}
+div[data-baseweb="popover"] li:hover{
+  background: rgba(255,255,255,0.08) !important;
+}
+
+/* READONLY CARD (ganti text_input disabled biar ga putih) */
+.readonly{
+  padding: 10px 12px;
+  border-radius: 14px;
+  background: rgba(255,255,255,0.08);
+  border: 1px solid rgba(255,255,255,0.18);
+  color: rgba(229,231,235,0.78);
+  font-weight: 700;
+}
+.readonly small{
+  display:block;
+  margin-top:4px;
+  color: rgba(229,231,235,0.60);
+  font-weight: 600;
 }
 
 /* HERO */
@@ -242,38 +257,6 @@ div[data-testid="stDataFrame"]{
   border: 1px solid rgba(255,255,255,0.12);
   background: rgba(10,16,32,0.55) !important;
 }
-div[data-testid="stDataFrame"] .ag-root-wrapper{
-  background: rgba(10,16,32,0.55) !important;
-  border: none !important;
-}
-div[data-testid="stDataFrame"] .ag-header{
-  background: rgba(255,255,255,0.06) !important;
-  border-bottom: 1px solid rgba(255,255,255,0.10) !important;
-}
-div[data-testid="stDataFrame"] .ag-header-cell-label{
-  color: rgba(229,231,235,0.92) !important;
-  font-weight: 700 !important;
-}
-div[data-testid="stDataFrame"] .ag-row{
-  background: rgba(0,0,0,0) !important;
-  color: rgba(229,231,235,0.92) !important;
-}
-div[data-testid="stDataFrame"] .ag-row:hover{
-  background: rgba(255,255,255,0.06) !important;
-}
-div[data-testid="stDataFrame"] .ag-cell{
-  border-bottom: 1px solid rgba(255,255,255,0.08) !important;
-  border-right: 1px solid rgba(255,255,255,0.06) !important;
-  color: rgba(229,231,235,0.92) !important;
-}
-
-/* CENTER KOLOM "No" */
-div[data-testid="stDataFrame"] div[col-id="No"]{
-  text-align: center !important;
-}
-div[data-testid="stDataFrame"] .ag-header-cell[col-id="No"] .ag-header-cell-label{
-  justify-content: center !important;
-}
 
 /* Buttons */
 .stButton>button{
@@ -288,7 +271,7 @@ div[data-testid="stDataFrame"] .ag-header-cell[col-id="No"] .ag-header-cell-labe
   background: rgba(255,255,255,0.14);
 }
 
-/* FOOTER FIXED */
+/* FOOTER */
 .app-footer{
   position: fixed;
   left: 0;
@@ -313,7 +296,6 @@ div[data-testid="stDataFrame"] .ag-header-cell[col-id="No"] .ag-header-cell-labe
 def fmt_rp(n: int) -> str:
     return f"{n:,.0f}".replace(",", ".")
 
-
 INCOME_DISPLAY = {
     "Rendah": f"Rendah (≤ {fmt_rp(5_000_000)})",
     "Sedang": f"Sedang ({fmt_rp(5_000_000)}–{fmt_rp(10_000_000)})",
@@ -325,16 +307,13 @@ AGE_DISPLAY = {
     "Lansia": "Lansia (≥ 60)",
 }
 
-
 def format_penghasilan(v) -> str:
     s = str(v).strip()
     return INCOME_DISPLAY.get(s, s)
 
-
 def format_usia(v) -> str:
     s = str(v).strip()
     return AGE_DISPLAY.get(s, s)
-
 
 # ==========================
 # LOAD DATA (UPLOAD)
@@ -349,7 +328,6 @@ def load_data(source) -> pd.DataFrame:
     df_.columns = [str(c).strip() for c in df_.columns]
     df_ = df_.fillna("").applymap(lambda x: str(x).strip())
     return df_
-
 
 # ==========================
 # SIDEBAR
@@ -370,13 +348,17 @@ with st.sidebar:
 
     uploaded_csv = st.file_uploader("📤 Upload CSV", type=["csv"])
 
-    # masih boleh ditampilkan, tapi tidak dipakai lagi (karena wajib upload)
-    st.text_input(
-        "Nama file CSV",
-        value="data_pelanggan_fix1.csv",
-        key="file_name_cfg",
-        disabled=True,
+    # ✅ GANTI: jangan text_input disabled (biar ga putih)
+    st.markdown("**Nama file CSV**")
+    st.markdown(
+        """
+        <div class="readonly">
+          <small>file wajib upload</small>
+        </div>
+        """,
+        unsafe_allow_html=True,
     )
+
     target_col = st.text_input("Kolom Target", value="Keputusan", key="target_col_cfg")
 
     st.markdown("---")
@@ -398,7 +380,7 @@ if uploaded_csv is None:
     st.stop()
 
 # ==========================
-# LOAD DF (UPLOAD ONLY)
+# LOAD DF
 # ==========================
 try:
     df = load_data(uploaded_csv)
@@ -418,7 +400,7 @@ if missing:
     st.stop()
 
 # ==========================
-# FILTERS (aktif setelah upload)
+# FILTERS
 # ==========================
 with st.sidebar:
     pekerjaan = st.multiselect(
@@ -514,7 +496,6 @@ st.write("")
 # ==========================
 features = ["Penghasilan", "Usia", "Pekerjaan", "Kredit"]
 
-
 def train_test_split(df_in: pd.DataFrame, test_size: float, seed: int):
     idx = list(range(len(df_in)))
     random.Random(seed).shuffle(idx)
@@ -522,7 +503,6 @@ def train_test_split(df_in: pd.DataFrame, test_size: float, seed: int):
     train_idx = idx[:cut]
     test_idx = idx[cut:]
     return df_in.iloc[train_idx].reset_index(drop=True), df_in.iloc[test_idx].reset_index(drop=True)
-
 
 df_for_model = df_filtered.copy()
 if len(df_for_model) < 5:
@@ -543,10 +523,6 @@ PAPER_BG = "rgba(0,0,0,0)"
 GRID_CLR = "rgba(255,255,255,0.10)"
 FONT_CLR = "rgba(229,231,235,0.90)"
 
-PALETTE_DECISION = ["#38bdf8", "#a78bfa"]
-PALETTE_CREDIT = ["#34d399", "#60a5fa"]
-
-
 def style_fig(fig):
     fig.update_layout(
         plot_bgcolor=CHART_BG,
@@ -558,7 +534,6 @@ def style_fig(fig):
     fig.update_xaxes(showgrid=False, color=FONT_CLR)
     fig.update_yaxes(showgrid=True, gridcolor=GRID_CLR, zeroline=False, color=FONT_CLR)
     return fig
-
 
 # ==========================
 # TABS
@@ -583,18 +558,34 @@ with tab1:
         color=target_col,
         barmode="group",
         title="Jumlah Keputusan Berdasarkan Pekerjaan",
-        color_discrete_sequence=PALETTE_DECISION,
+        color_discrete_sequence=["#38bdf8", "#a78bfa", "#34d399", "#fb7185"],
     )
     fig1 = style_fig(fig1)
     fig1.update_traces(marker_line_width=0)
     st.plotly_chart(fig1, use_container_width=True)
 
+    # ✅ PIE BARU: IYA vs TIDAK
+    decision_counts = (
+        df_filtered[target_col]
+        .astype(str)
+        .str.strip()
+        .str.lower()
+        .replace({"iya": "Iya", "tidak": "Tidak"})
+        .value_counts()
+        .reindex(["Iya", "Tidak"])
+        .fillna(0)
+        .reset_index()
+    )
+    decision_counts.columns = ["Keputusan", "Jumlah"]
+
     fig2 = px.pie(
-        df_filtered,
-        names="Kredit",
-        title="Proporsi Kondisi Kredit",
+        decision_counts,
+        names="Keputusan",
+        values="Jumlah",
+        title="Proporsi Potensi Keputusan (Iya vs Tidak)",
         hole=0.55,
-        color_discrete_sequence=PALETTE_CREDIT,
+        color="Keputusan",
+        color_discrete_map={"Iya": "#34d399", "Tidak": "#60a5fa"},
     )
     fig2 = style_fig(fig2)
     fig2.update_traces(textfont_color=FONT_CLR)
@@ -620,7 +611,7 @@ with tab2:
     st.markdown("</div>", unsafe_allow_html=True)
 
 # ==========================
-# TAB PREDIKSI (NAMA DROPDOWN + AUTO ISI)
+# TAB PREDIKSI
 # ==========================
 def _apply_name_to_inputs():
     nama = st.session_state.get("pred_nama", "")
@@ -637,7 +628,6 @@ def _apply_name_to_inputs():
     st.session_state["pred_pekerjaan"] = str(r["Pekerjaan"])
     st.session_state["pred_kredit"] = str(r["Kredit"])
 
-
 with tab3:
     st.markdown('<div class="glass">', unsafe_allow_html=True)
     st.subheader("🔮 Prediksi Keputusan (ID3)")
@@ -647,18 +637,11 @@ with tab3:
         nama_vals = [x for x in sorted(df["Nama"].astype(str).unique()) if x.strip() != ""]
         nama_list += nama_vals
 
-    # >>> FIX: kolom Penghasilan & Usia dibuat lebih lebar biar label angka tidak kepotong
     c0, c1, c2, c3, c4 = st.columns([1.4, 2.2, 1.6, 1.2, 1.2])
-
     sample = {}
 
     with c0:
-        st.selectbox(
-            "Nama",
-            options=nama_list,
-            key="pred_nama",
-            on_change=_apply_name_to_inputs,
-        )
+        st.selectbox("Nama", options=nama_list, key="pred_nama", on_change=_apply_name_to_inputs)
 
     with c1:
         sample["Penghasilan"] = st.selectbox(
@@ -677,18 +660,10 @@ with tab3:
         )
 
     with c3:
-        sample["Pekerjaan"] = st.selectbox(
-            "Pekerjaan",
-            sorted(df["Pekerjaan"].unique()),
-            key="pred_pekerjaan",
-        )
+        sample["Pekerjaan"] = st.selectbox("Pekerjaan", sorted(df["Pekerjaan"].unique()), key="pred_pekerjaan")
 
     with c4:
-        sample["Kredit"] = st.selectbox(
-            "Kredit",
-            sorted(df["Kredit"].unique()),
-            key="pred_kredit",
-        )
+        sample["Kredit"] = st.selectbox("Kredit", sorted(df["Kredit"].unique()), key="pred_kredit")
 
     if st.button("✅ Prediksi Sekarang", key="btn_pred"):
         hasil = predict(tree, sample)
